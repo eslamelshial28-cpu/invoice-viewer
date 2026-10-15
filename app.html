@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>جاري فتح الفاتورة...</title>
+    <style>
+        body { font-family: Arial, sans-serif; background: #f4f6f9; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; text-align: center; }
+        .box { background: #fff; padding: 30px; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        h3 { color: #333; margin-bottom: 10px; }
+        p { color: #666; font-size: 14px; }
+        a { color: #1a73e8; text-decoration: none; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="box">
+        <h3>جاري فتح الفاتورة...</h3>
+        <p id="status">يرجى الانتظار لحظة واحدة</p>
+        <p><a id="manualLink" href="#" style="display:none;">اضغط هنا إذا لم تفتح الفاتورة تلقائياً</a></p>
+    </div>
+
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const invoiceId = urlParams.get('id');
+        
+        // رابط الـ Web App الخاص بك في جوجل
+        const scriptURL = "https://script.google.com/macros/s/AKfycbyX8YNRPho_RNQ_lezO6o4lj14WtYrkleyr-_9H_LEvrsQ0IvHRJkl3P-p4UlNFwNB3/exec?id=" + invoiceId;
+
+        if (!invoiceId) {
+            document.getElementById('status').innerText = "خطأ: رقم الفاتورة غير موجود.";
+        } else {
+            // استخدام credentials: 'omit' لمنع إرسال كوكيز الحسابات وتجاوز المشكلة نهائياً
+            fetch(scriptURL, { credentials: 'omit' })
+                .then(response => response.text())
+                .then(htmlContent => {
+                    // استخراج رابط الفاتورة من استجابة السكريبت وفتحها فوراً
+                    document.open();
+                    document.write(htmlContent);
+                    document.close();
+                })
+                .catch(err => {
+                    document.getElementById('status').innerText = "تعذر فتح الفاتورة تلقائياً.";
+                    let manual = document.getElementById('manualLink');
+                    manual.href = scriptURL;
+                    manual.style.display = "inline";
+                });
+        }
+    </script>
+</body>
+</html>
