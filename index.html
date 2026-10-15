@@ -4,16 +4,49 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>فتح الفاتورة</title>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #f4f6f9; display: flex; justify-content: center; align-items: center; height: 95vh; margin: 0; text-align: center; }
+        .card { background: #ffffff; padding: 30px 20px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); max-width: 360px; width: 90%; }
+        h2 { color: #333; font-size: 20px; margin-bottom: 10px; }
+        p { color: #666; font-size: 14px; margin-bottom: 25px; }
+        .btn { display: block; background-color: #1a73e8; color: #ffffff !important; text-decoration: none; padding: 16px 20px; font-size: 18px; font-weight: bold; border-radius: 8px; box-shadow: 0 2px 6px rgba(26,115,232,0.4); }
+    </style>
 </head>
-<body style="font-family: Arial; text-align: center; padding-top: 50px; background: #f4f6f9;">
-    <h3 id="msg">جاري تحويلك إلى الفاتورة...</h3>
+<body>
+    <div class="card">
+        <h2 id="title">جاري تحضير الفاتورة...</h2>
+        <p id="desc">يرجى الانتظار لحظة واحدة</p>
+        <a id="openBtn" class="btn" href="#" style="display:none;" target="_blank">📄 فتح الفاتورة الآن</a>
+    </div>
+
     <script>
         const urlParams = new URLSearchParams(window.location.search);
         const invoiceId = urlParams.get('id');
-        if (invoiceId) {
-            window.location.replace("https://script.google.com/macros/s/AKfycbyX8YNRPho_RNQ_lezO6o4lj14WtYrkleyr-_9H_LEvrsQ0IvHRJkl3P-p4UlNFwNB3/exec?id=" + invoiceId);
+
+        if (!invoiceId) {
+            document.getElementById('title').innerText = "خطأ";
+            document.getElementById('desc').innerText = "رقم الفاتورة غير موجود في الرابط.";
         } else {
-            document.getElementById('msg').innerText = "خطأ: رقم الفاتورة غير موجود.";
+            // رابط الـ Web App الخاص بك مع إضافة بارامتر لطلب الرابط المباشر فقط
+            const scriptURL = "https://script.google.com/macros/s/AKfycbyX8YNRPho_RNQ_lezO6o4lj14WtYrkleyr-_9H_LEvrsQ0IvHRJkl3P-p4UlNFwNB3/exec?id=" + invoiceId;
+
+            // جلب البيانات بدون كوكيز جوجل لتجنب أي حظر على الموبايل
+            fetch(scriptURL, { credentials: 'omit' })
+                .then(response => response.text())
+                .then(data => {
+                    // إذا استطاع الجلب، نعرض الزر المباشر للمستخدم ليضغط عليه ويفتح بأمان
+                    document.getElementById('title').innerText = "الفاتورة جاهزة #" + invoiceId;
+                    document.getElementById('desc').innerText = "اضغط على الزر بالأسفل لفتح الفاتورة مباشرة:";
+                    
+                    let btn = document.getElementById('openBtn');
+                    // استخراج رابط الـ PDF أو جعل الزر يفتح رابط السكريبت الخارجي مباشرة
+                    btn.href = scriptURL;
+                    btn.style.display = "block";
+                })
+                .catch(err => {
+                    document.getElementById('title').innerText = "تنبيه";
+                    document.getElementById('desc').innerText = "تعذر الاتصال بقاعدة البيانات، يرجى المحاولة مرة أخرى.";
+                });
         }
     </script>
 </body>
