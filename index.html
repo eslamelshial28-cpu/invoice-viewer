@@ -1,35 +1,29 @@
-<!DOCTYPE html>
-<html dir="rtl" lang="ar">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>فتح الفاتورة</title>
-    <style>
-        body { font-family: Arial, sans-serif; background-color: #f4f6f9; display: flex; justify-content: center; align-items: center; height: 95vh; margin: 0; text-align: center; }
-        .card { background: #ffffff; padding: 30px 20px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); max-width: 360px; width: 90%; }
-        h2 { color: #333; font-size: 20px; margin-bottom: 10px; }
-        p { color: #666; font-size: 14px; margin-bottom: 25px; }
-        .btn { display: block; background-color: #1a73e8; color: #ffffff !important; text-decoration: none; padding: 16px 20px; font-size: 18px; font-weight: bold; border-radius: 8px; box-shadow: 0 2px 6px rgba(26,115,232,0.4); }
-    </style>
-</head>
-<body>
-    <div class="card">
-        <h2>الفاتورة جاهزة</h2>
-        <p>اضغط على الزر بالأسفل لفتح الفاتورة مباشرة:</p>
-        <a id="openBtn" class="btn" href="#" target="_blank">📄 فتح الفاتورة الآن</a>
-    </div>
+function doGet(e) {
+  try {
+    var rawInvoiceId = (e && e.parameter && e.parameter.id) ? String(e.parameter.id).trim() : "";
+    var destinationFolderId = "1mFzwmIkta7FBAvzEUCVf2UzPPe7X71oM";
 
-    <script>
-        const urlParams = new URLSearchParams(window.location.search);
-        const invoiceId = urlParams.get('id');
-        if (invoiceId) {
-            const scriptURL = "https://script.google.com/macros/s/AKfycbyX8YNRPho_RNQ_lezO6o4lj14WtYrkleyr-_9H_LEvrsQ0IvHRJkl3P-p4UlNFwNB3/exec?id=" + invoiceId;
-            document.getElementById('openBtn').href = scriptURL;
-        } else {
-            document.querySelector('h2').innerText = "خطأ";
-            document.querySelector('p').innerText = "رقم الفاتورة غير موجود.";
-            document.getElementById('openBtn').style.display = "none";
-        }
-    </script>
-</body>
-</html>
+    if (!rawInvoiceId) {
+      return ContentService.createTextOutput("⚠️ رقم الفاتورة غير موجود.");
+    }
+
+    var destinationFolder = DriveApp.getFolderById(destinationFolderId);
+    var targetFileName = "Invoice_" + rawInvoiceId + ".pdf";
+    var files = destinationFolder.getFilesByName(targetFileName);
+
+    if (!files.hasNext()) {
+      return ContentService.createTextOutput("⏳ الفاتورة قيد الإنشاء أو غير موجودة، يرجى المحاولة بعد ثوانٍ.");
+    }
+
+    var file = files.next();
+    file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+    var fileUrl = "https://drive.google.com/file/d/" + file.getId() + "/view";
+
+    // إعادة توجيه فورية للمتصفح برابط الدرايف المباشر
+    var html = '<script>window.location.replace("' + fileUrl + '");</script>';
+    return HtmlService.createHtmlOutput(html);
+
+  } catch (error) {
+    return ContentService.createTextOutput("❌ خطأ: " + error.toString());
+  }
+}
